@@ -1,0 +1,17 @@
+{{- define "login" -}}
+{{- template "header" . -}}
+
+<form action="/login" method="post">
+    <div>
+        <label>user</label>
+        <input type ="text" name="name">
+    </div>
+    <div>
+        <label>password</label>
+        <input type="password" name="password">
+    </div>
+    <button type="submit">login</button>
+</form>
+
+{{- template "footer" . -}}
+{{- end -}}

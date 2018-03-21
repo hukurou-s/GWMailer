@@ -24,6 +24,7 @@ func main() {
 	e := echo.New()
 	e.Renderer = t
 	e.GET("/", getIndex)
+	e.GET("/login", getLogin)
 	e.Logger.Fatal(e.Start(":1323"))
 }
 
@@ -31,4 +32,8 @@ func getIndex(c echo.Context) error {
 	return c.Render(http.StatusOK, "index", map[string]interface{}{
 		"PageName": "Top Page",
 	})
+}
+
+func getLogin(c echo.Context) error {
+	return c.Render(http.StatusOK, "login", map[string]interface{}{})
 }
