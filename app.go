@@ -25,6 +25,7 @@ func main() {
 	e.Renderer = t
 	e.GET("/", getIndex)
 	e.GET("/login", getLogin)
+	e.POST("/mypage", postMypage)
 	e.Logger.Fatal(e.Start(":1323"))
 }
 
@@ -36,4 +37,16 @@ func getIndex(c echo.Context) error {
 
 func getLogin(c echo.Context) error {
 	return c.Render(http.StatusOK, "login", map[string]interface{}{})
+}
+
+func postMypage(c echo.Context) error {
+	name := c.FormValue("name")
+	password := c.FormValue("password")
+
+	if name != "hoge" || password != "piyo" {
+		return c.Redirect(http.StatusSeeOther, "/login")
+	}
+	return c.Render(http.StatusOK, "mypage", map[string]interface{}{
+		"UserName": name,
+	})
 }
