@@ -25,6 +25,8 @@ func main() {
 	e.Renderer = t
 	e.GET("/", getIndex)
 	e.GET("/login", getLogin)
+	e.GET("/user/new", getUserNew)
+	e.POST("/user/create", postCreateUser)
 	e.POST("/mypage", postMypage)
 	e.Logger.Fatal(e.Start(":1323"))
 }
@@ -33,6 +35,15 @@ func getIndex(c echo.Context) error {
 	return c.Render(http.StatusOK, "index", map[string]interface{}{
 		"PageName": "Top Page",
 	})
+}
+
+func getUserNew(c echo.Context) error {
+	return c.Render(http.StatusOK, "user_new", map[string]interface{}{})
+}
+
+func postCreateUser(c echo.Context) error {
+	// registration db
+	return c.Redirect(http.StatusSeeOther, "/login")
 }
 
 func getLogin(c echo.Context) error {
