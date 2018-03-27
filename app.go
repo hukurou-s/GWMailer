@@ -4,8 +4,13 @@ import (
 	"html/template"
 	"io"
 	"net/http"
+	"time"
 
+	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/labstack/echo"
+
+	"github.com/hukurou-s/GWMailer/db/models"
 )
 
 type Template struct {
@@ -21,6 +26,7 @@ func main() {
 	t := &Template{
 		templates: template.Must(template.ParseGlob("views/*.html")),
 	}
+
 	e := echo.New()
 	e.Renderer = t
 	e.GET("/", getIndex)
@@ -43,6 +49,25 @@ func getUserNew(c echo.Context) error {
 
 func postCreateUser(c echo.Context) error {
 	// registration db
+	name := c.FormValue("name")
+	password := c.FormValue("password")
+	if password != c.FormValue("password_confirm") {
+		return c.Redirect(http.StatusSeeOther, "/login")
+	}
+
+	db, _ := gorm.Open("postgres", "user=LEO dbname=gwmailer-db password='' sslmode=disable")
+	defer db.Close()
+
+	user := models.User{}
+	user.Id = 0
+	user.Name = name
+	user.Password = password // to hash
+	user.CreatedAt = time.Now()
+	user.UpdatedAt = user.CreatedAt
+	user.DeletedAt = time.Time{}
+
+	db.Create(&user)
+
 	return c.Redirect(http.StatusSeeOther, "/login")
 }
 
