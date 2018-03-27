@@ -10,7 +10,7 @@ type Mail struct {
 	To        string
 	Cc        string
 	Subject   string
-	body      text
+	body      string
 	GotAt     time.Time
 	CreatedAt time.Time
 	UpdatedAt time.Time
