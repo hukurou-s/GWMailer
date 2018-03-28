@@ -1,10 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"html/template"
 	"io"
 	"net/http"
-	"time"
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
@@ -58,13 +58,10 @@ func postCreateUser(c echo.Context) error {
 	db, _ := gorm.Open("postgres", "user=LEO dbname=gwmailer-db password='' sslmode=disable")
 	defer db.Close()
 
-	user := models.User{}
-	user.Id = 0
-	user.Name = name
-	user.Password = password // to hash
-	user.CreatedAt = time.Now()
-	user.UpdatedAt = user.CreatedAt
-	user.DeletedAt = time.Time{}
+	user := models.User{
+		Name:     name,
+		Password: password, // to hash
+	}
 
 	db.Create(&user)
 
@@ -79,9 +76,20 @@ func postMypage(c echo.Context) error {
 	name := c.FormValue("name")
 	password := c.FormValue("password")
 
-	if name != "hoge" || password != "piyo" {
+	db, err := gorm.Open("postgres", "user=LEO dbname=gwmailer-db password='' sslmode=disable")
+	defer db.Close()
+
+	if err != nil {
+		fmt.Print(err)
+	}
+
+	user := models.User{}
+	db.First(&user, "name = ?", name)
+
+	if user.Password != password {
 		return c.Redirect(http.StatusSeeOther, "/login")
 	}
+
 	return c.Render(http.StatusOK, "mypage", map[string]interface{}{
 		"UserName": name,
 	})
