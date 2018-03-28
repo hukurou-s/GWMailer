@@ -11,6 +11,7 @@ import (
 
 func main() {
 	db, err := gorm.Open("postgres", "user=LEO dbname=gwmailer-db password='' sslmode=disable")
+	defer db.Close()
 
 	if err != nil {
 		fmt.Println(err)
@@ -19,7 +20,7 @@ func main() {
 		fmt.Println("success")
 	}
 
-	db.CreateTable(&models.User{})
+	db.AutoMigrate(&models.User{})
+	//db.CreateTable(&models.User{})
 
-	defer db.Close()
 }

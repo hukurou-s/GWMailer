@@ -1,14 +1,11 @@
 package models
 
 import (
-	"time"
+	"github.com/jinzhu/gorm"
 )
 
 type User struct {
-	Id        int64
-	Name      string
-	Password  string
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt time.Time
+	gorm.Model
+	Name     string `gorm:"size:255"`
+	Password string
 }
