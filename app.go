@@ -5,9 +5,11 @@ import (
 	"html/template"
 	"io"
 	"net/http"
+	"os"
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
+	"github.com/joho/godotenv"
 	"github.com/labstack/echo"
 
 	"github.com/hukurou-s/GWMailer/db/models"
@@ -19,6 +21,23 @@ type Template struct {
 
 func (t *Template) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
 	return t.templates.ExecuteTemplate(w, name, data)
+}
+
+var (
+	db_user     string
+	db_name     string
+	db_password string
+)
+
+func init() {
+	err := godotenv.Load()
+	if err != nil {
+		fmt.Print(err)
+	}
+
+	db_user = os.Getenv("USER_NAME")
+	db_name = os.Getenv("DB_NAME")
+	db_password = os.Getenv("DB_PASSWORD")
 }
 
 func main() {
@@ -55,7 +74,7 @@ func postCreateUser(c echo.Context) error {
 		return c.Redirect(http.StatusSeeOther, "/login")
 	}
 
-	db, _ := gorm.Open("postgres", "user=LEO dbname=gwmailer-db password='' sslmode=disable")
+	db, _ := gorm.Open("postgres", "user="+db_user+" dbname="+db_name+" password='"+db_password+"' sslmode=disable")
 	defer db.Close()
 
 	user := models.User{
@@ -76,7 +95,8 @@ func postMypage(c echo.Context) error {
 	name := c.FormValue("name")
 	password := c.FormValue("password")
 
-	db, err := gorm.Open("postgres", "user=LEO dbname=gwmailer-db password='' sslmode=disable")
+	db, err := gorm.Open("postgres", "user="+db_user+" dbname="+db_name+" password='"+db_password+"' sslmode=disable")
+
 	defer db.Close()
 
 	if err != nil {
