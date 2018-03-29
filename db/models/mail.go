@@ -2,6 +2,8 @@ package models
 
 import (
 	"time"
+
+	"github.com/jinzhu/gorm"
 )
 
 type Mail struct {
