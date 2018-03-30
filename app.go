@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"html/template"
 	"io"
@@ -79,7 +81,7 @@ func postCreateUser(c echo.Context) error {
 
 	user := models.User{
 		Name:     name,
-		Password: password, // to hash
+		Password: toHash(password), // to hash
 	}
 
 	db.Create(&user)
@@ -106,11 +108,16 @@ func postMypage(c echo.Context) error {
 	user := models.User{}
 	db.First(&user, "name = ?", name)
 
-	if user.Password != password {
+	if user.Password != toHash(password) {
 		return c.Redirect(http.StatusSeeOther, "/login")
 	}
 
 	return c.Render(http.StatusOK, "mypage", map[string]interface{}{
 		"UserName": name,
 	})
+}
+
+func toHash(password string) string {
+	hash := sha256.Sum256([]byte(password))
+	return hex.EncodeToString(hash[:])
 }
