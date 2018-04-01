@@ -20,7 +20,6 @@ func main() {
 		fmt.Println("success")
 	}
 
-	db.AutoMigrate(&models.User{})
-	//db.CreateTable(&models.User{})
+	db.AutoMigrate(&models.User{}, &models.Mail{})
 
 }
