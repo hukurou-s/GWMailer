@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/ipfans/echo-session"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/joho/godotenv"
@@ -50,6 +51,11 @@ func main() {
 
 	e := echo.New()
 	e.Renderer = t
+
+	store := session.NewCookieStore([]byte("secret"))
+	store.MaxAge(1200)
+	e.Use(session.Sessions("GWMSESSION", store))
+
 	e.GET("/", getIndex)
 	e.GET("/login", getLogin)
 	e.GET("/user/new", getUserNew)
@@ -81,7 +87,7 @@ func postCreateUser(c echo.Context) error {
 
 	user := models.User{
 		Name:     name,
-		Password: toHash(password), // to hash
+		Password: toHash(password),
 	}
 
 	db.Create(&user)
@@ -111,6 +117,10 @@ func postMypage(c echo.Context) error {
 	if user.Password != toHash(password) {
 		return c.Redirect(http.StatusSeeOther, "/login")
 	}
+
+	session := session.Default(c)
+	session.Set("USERID", user.ID)
+	session.Save()
 
 	return c.Render(http.StatusOK, "mypage", map[string]interface{}{
 		"UserName": name,
