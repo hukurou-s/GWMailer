@@ -57,7 +57,8 @@ func main() {
 	e.Use(session.Sessions("GWMSESSION", store))
 
 	e.GET("/", getIndex)
-	e.GET("/login", getLogin)
+	e.GET("/logins/new", getNewLogin)
+	e.POST("/logins", postLogins)
 	e.GET("/user/new", getUserNew)
 	e.POST("/user/create", postCreateUser)
 	e.POST("/mypage", postMypage)
@@ -92,16 +93,18 @@ func postCreateUser(c echo.Context) error {
 
 	db.Create(&user)
 
-	return c.Redirect(http.StatusSeeOther, "/login")
+	return c.Redirect(http.StatusSeeOther, "/logins")
 }
 
-func getLogin(c echo.Context) error {
+func getNewLogin(c echo.Context) error {
 	return c.Render(http.StatusOK, "login", map[string]interface{}{})
 }
 
-func postMypage(c echo.Context) error {
+func postLogins(c echo.Context) error {
 	name := c.FormValue("name")
 	password := c.FormValue("password")
+
+	fmt.Print(name)
 
 	db, err := gorm.Open("postgres", "user="+db_user+" dbname="+db_name+" password='"+db_password+"' sslmode=disable")
 
@@ -114,16 +117,42 @@ func postMypage(c echo.Context) error {
 	user := models.User{}
 	db.First(&user, "name = ?", name)
 
+	if db.Find(&user, "name = ?", name).RecordNotFound() {
+		return c.Redirect(http.StatusSeeOther, "/logins/new")
+	}
+	fmt.Println("aaaaa")
+	fmt.Println(user)
+
 	if user.Password != toHash(password) {
-		return c.Redirect(http.StatusSeeOther, "/login")
+		return c.Redirect(http.StatusSeeOther, "/logins/new")
 	}
 
 	session := session.Default(c)
 	session.Set("USERID", user.ID)
 	session.Save()
 
+	return c.Redirect(http.StatusSeeOther, "/mypage")
+
+}
+
+func postMypage(c echo.Context) error {
+
+	session := session.Default(c)
+	id := session.Get("USERID").(int)
+
+	db, err := gorm.Open("postgres", "user="+db_user+" dbname="+db_name+" password='"+db_password+"' sslmode=disable")
+
+	defer db.Close()
+
+	if err != nil {
+		fmt.Print(err)
+	}
+
+	user := models.User{}
+	db.First(&user, id)
+
 	return c.Render(http.StatusOK, "mypage", map[string]interface{}{
-		"UserName": name,
+		"UserName": user.Name,
 	})
 }
 
