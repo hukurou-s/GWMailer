@@ -61,7 +61,7 @@ func main() {
 	e.POST("/logins", postLogins)
 	e.GET("/user/new", getUserNew)
 	e.POST("/user/create", postCreateUser)
-	e.POST("/mypage", postMypage)
+	e.GET("/mypage", getMypage)
 	e.Logger.Fatal(e.Start(":1323"))
 }
 
@@ -104,8 +104,6 @@ func postLogins(c echo.Context) error {
 	name := c.FormValue("name")
 	password := c.FormValue("password")
 
-	fmt.Print(name)
-
 	db, err := gorm.Open("postgres", "user="+db_user+" dbname="+db_name+" password='"+db_password+"' sslmode=disable")
 
 	defer db.Close()
@@ -120,8 +118,6 @@ func postLogins(c echo.Context) error {
 	if db.Find(&user, "name = ?", name).RecordNotFound() {
 		return c.Redirect(http.StatusSeeOther, "/logins/new")
 	}
-	fmt.Println("aaaaa")
-	fmt.Println(user)
 
 	if user.Password != toHash(password) {
 		return c.Redirect(http.StatusSeeOther, "/logins/new")
@@ -135,10 +131,10 @@ func postLogins(c echo.Context) error {
 
 }
 
-func postMypage(c echo.Context) error {
+func getMypage(c echo.Context) error {
 
 	session := session.Default(c)
-	id := session.Get("USERID").(int)
+	id := session.Get("USERID")
 
 	db, err := gorm.Open("postgres", "user="+db_user+" dbname="+db_name+" password='"+db_password+"' sslmode=disable")
 
