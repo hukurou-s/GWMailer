@@ -3,8 +3,10 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
+	decode "github.com/curious-eyes/jmail"
 	"github.com/joho/godotenv"
 	"gopkg.in/mvader/go-imapreader.v1"
 )
@@ -45,4 +47,27 @@ func main() {
 		panic(err)
 	}
 	defer r.Logout()
+
+	mails, err := r.List(imapreader.GMailInbox, imapreader.SearchUnseen)
+	if err != nil {
+		panic(err)
+	}
+
+	for _, mail := range mails {
+
+		date := "Date: " + mail.Header["Date"][0] + "\n"
+		from := "From: " + mail.Header["From"][0] + "\n"
+		to := "To: " + mail.Header["To"][0] + "\n"
+		subject := "Subject: " + mail.Header["Subject"][0] + "\n"
+		contentType := "Content-Type: " + mail.Header["Content-Type"][0] + "\n"
+		contentTransferEncoding := "Content-Transfer-Encoding: " + mail.Header["Content-Transfer-Encoding"][0] + "\n"
+		message := date + from + to + subject + contentType + contentTransferEncoding + "\n" + string(mail.Body)
+
+		r := strings.NewReader(message)
+		m, _ := decode.ReadMessage(r)
+		body, _ := m.DecBody()
+
+		fmt.Printf("%s", body)
+	}
+
 }
