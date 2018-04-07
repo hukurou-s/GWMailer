@@ -7,7 +7,11 @@ import (
 	"time"
 
 	decode "github.com/curious-eyes/jmail"
+	"github.com/hukurou-s/GWMailer/db/models"
+	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/joho/godotenv"
+
 	"gopkg.in/mvader/go-imapreader.v1"
 )
 
@@ -15,6 +19,9 @@ var (
 	imap_server string
 	user_name   string
 	password    string
+	db_user     string
+	db_name     string
+	db_password string
 )
 
 func init() {
@@ -26,6 +33,11 @@ func init() {
 	imap_server = os.Getenv("IMAP_SERVER")
 	user_name = os.Getenv("MAIL_ADDRESS")
 	password = os.Getenv("MAIL_PASSWORD")
+
+	db_user = os.Getenv("USER_NAME")
+	db_name = os.Getenv("DB_NAME")
+	db_password = os.Getenv("DB_PASSWORD")
+
 }
 
 func main() {
@@ -48,10 +60,13 @@ func main() {
 	}
 	defer r.Logout()
 
-	mails, err := r.List(imapreader.GMailInbox, imapreader.SearchUnseen)
+	mails, err := r.List(imapreader.GMailInbox, imapreader.SearchFlagged)
 	if err != nil {
 		panic(err)
 	}
+
+	db, _ := gorm.Open("postgres", "user="+db_user+" dbname="+db_name+" password='"+db_password+"' sslmode=disable")
+	defer db.Close()
 
 	for _, mail := range mails {
 
@@ -67,7 +82,23 @@ func main() {
 		m, _ := decode.ReadMessage(r)
 		body, _ := m.DecBody()
 
+		str := mail.Header["Date"][0]
+		layout := "Mon, 2 Jan 2006 15:04:05 -0700"
+		t, _ := time.Parse(layout, str)
+
 		fmt.Printf("%s", body)
+
+		mail := models.Mail{
+			From:       mail.Header["From"][0],
+			To:         mail.Header["To"][0],
+			Cc:         "",
+			Subject:    mail.Header["Subject"][0],
+			Body:       string(body),
+			ReceivedAt: t,
+		}
+
+		db.Create(&mail)
+
 	}
 
 }
