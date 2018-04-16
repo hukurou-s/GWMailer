@@ -1,0 +1,27 @@
+{{- define "mail_account_new" -}}
+{{- template "header" . -}}
+
+<form action="/account/create" method="post">
+    <div>
+        <label>user</label>
+        <input type ="text" name="address">
+    </div>
+    <div>
+        <label>password</label>
+        <input type="password" name="password">
+    </div>
+    <div>
+        <label>password confirm</label>
+        <input type="password" name="password_confirm">
+    </div>
+
+    <div>
+        <label>imap server</label>
+        <input type="text" name="server">
+    </div>
+
+    <button type="submit">create</button>
+</form>
+
+{{- template "footer" . -}}
+{{- end -}}

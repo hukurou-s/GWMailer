@@ -62,6 +62,9 @@ func main() {
 	e.GET("/user/new", getUserNew)
 	e.POST("/user/create", postCreateUser)
 	e.GET("/mypage", getMypage)
+	e.GET("/accounts/new", getMailAccountNew)
+	e.POST("/accounts/create", postCreateMailAccount)
+
 	e.Logger.Fatal(e.Start(":1323"))
 }
 
@@ -80,7 +83,7 @@ func postCreateUser(c echo.Context) error {
 	name := c.FormValue("name")
 	password := c.FormValue("password")
 	if password != c.FormValue("password_confirm") {
-		return c.Redirect(http.StatusSeeOther, "/login")
+		return c.Redirect(http.StatusSeeOther, "/users/new")
 	}
 
 	db, _ := gorm.Open("postgres", "user="+db_user+" dbname="+db_name+" password='"+db_password+"' sslmode=disable")
@@ -150,6 +153,14 @@ func getMypage(c echo.Context) error {
 	return c.Render(http.StatusOK, "mypage", map[string]interface{}{
 		"UserName": user.Name,
 	})
+}
+
+func getMailAccountNew(c echo.Context) error {
+	return c.Render(http.StatusOK, "mail_account_new", map[string]interface{}{})
+}
+
+func postCreateMailAccount(c echo.Context) error {
+	return c.Redirect(http.StatusSeeOther, "/mypage")
 }
 
 func toHash(password string) string {
