@@ -9,5 +9,5 @@ type Address struct {
 	Address  string `gorm:"size:255;not null;unique"`
 	Password string
 	Server   string
-	UserID   int
+	UserID   uint
 }

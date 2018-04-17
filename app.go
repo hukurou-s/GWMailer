@@ -1,6 +1,9 @@
 package main
 
 import (
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
@@ -30,6 +33,7 @@ var (
 	db_user     string
 	db_name     string
 	db_password string
+	secret_key  []byte
 )
 
 func init() {
@@ -41,6 +45,8 @@ func init() {
 	db_user = os.Getenv("USER_NAME")
 	db_name = os.Getenv("DB_NAME")
 	db_password = os.Getenv("DB_PASSWORD")
+	key := os.Getenv("KEY")
+	secret_key = convertTo32Byte(key)
 }
 
 func main() {
@@ -160,10 +166,62 @@ func getMailAccountNew(c echo.Context) error {
 }
 
 func postCreateMailAccount(c echo.Context) error {
+	// registration db
+	session := session.Default(c)
+	id := session.Get("USERID").(uint)
+
+	mailAddress := c.FormValue("mail_address")
+	password := c.FormValue("password")
+	server := c.FormValue("server")
+
+	if password != c.FormValue("password_confirm") {
+		return c.Redirect(http.StatusSeeOther, "/accounts/new")
+	}
+
+	db, _ := gorm.Open("postgres", "user="+db_user+" dbname="+db_name+" password='"+db_password+"' sslmode=disable")
+	defer db.Close()
+
+	address := models.Address{
+		Address:  mailAddress,
+		Password: toEncrypt(password),
+		Server:   server,
+		UserID:   id,
+	}
+
+	db.Create(&address)
+
 	return c.Redirect(http.StatusSeeOther, "/mypage")
 }
 
 func toHash(password string) string {
 	hash := sha256.Sum256([]byte(password))
 	return hex.EncodeToString(hash[:])
+}
+
+func convertTo32Byte(key string) []byte {
+	tmpKey := []byte(key)
+	for len(tmpKey) < 32 {
+		tmpKey = append(tmpKey, []byte(key)...)
+	}
+	secretKey := tmpKey[:32]
+	return secretKey
+}
+
+func toEncrypt(password string) string {
+
+	fmt.Println(string(secret_key))
+	plainPassword := []byte(password)
+	block, _ := aes.NewCipher(secret_key)
+
+	cipherPassword := make([]byte, aes.BlockSize+len(plainPassword))
+	iv := cipherPassword[:aes.BlockSize]
+	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
+		fmt.Printf("err: %s\n", err)
+	}
+
+	encryptStream := cipher.NewCTR(block, iv)
+
+	encryptStream.XORKeyStream(cipherPassword[aes.BlockSize:], plainPassword)
+
+	return hex.EncodeToString(cipherPassword)
 }
