@@ -1,7 +1,9 @@
 {{- define "mypage" -}}
 {{- template "header" . -}}
 
-<p>Welcome {{.UserName}}</p>
+<h3>Welcome {{.UserName}}</h3>
+<p>account : {{.MailAddress}}</p>
+<p>Last Mail : {{.Mail}}</p>
 
 {{- template "footer" . -}}
 {{- end -}}

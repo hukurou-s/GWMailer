@@ -1,4 +1,4 @@
-package main
+package mail
 
 import (
 	"fmt"
@@ -16,9 +16,6 @@ import (
 )
 
 var (
-	imap_server string
-	user_name   string
-	password    string
 	db_user     string
 	db_name     string
 	db_password string
@@ -30,25 +27,21 @@ func init() {
 		panic(err)
 	}
 
-	imap_server = os.Getenv("IMAP_SERVER")
-	user_name = os.Getenv("MAIL_ADDRESS")
-	password = os.Getenv("MAIL_PASSWORD")
-
 	db_user = os.Getenv("USER_NAME")
 	db_name = os.Getenv("DB_NAME")
 	db_password = os.Getenv("DB_PASSWORD")
 
 }
 
-func main() {
+func RegistUnSeenMail(address models.Address) {
 
 	r, err := imapreader.NewReader(imapreader.Options{
-		Addr:     imap_server,
-		Username: user_name,
-		Password: password,
+		Addr:     address.Server,
+		Username: address.Address,
+		Password: address.Password,
 		TLS:      true,
 		Timeout:  60 * time.Second,
-		MarkSeen: true,
+		MarkSeen: false,
 	})
 
 	if err != nil {
@@ -60,7 +53,7 @@ func main() {
 	}
 	defer r.Logout()
 
-	mails, err := r.List(imapreader.GMailInbox, imapreader.SearchFlagged)
+	mails, err := r.List(imapreader.GMailInbox, imapreader.SearchUnseen)
 	if err != nil {
 		panic(err)
 	}
@@ -100,5 +93,4 @@ func main() {
 		db.Create(&mail)
 
 	}
-
 }

@@ -19,6 +19,7 @@ import (
 	"github.com/labstack/echo"
 
 	"github.com/hukurou-s/GWMailer/db/models"
+	mailGetter "github.com/hukurou-s/GWMailer/mail"
 )
 
 type Template struct {
@@ -85,6 +86,7 @@ func getUserNew(c echo.Context) error {
 }
 
 func postCreateUser(c echo.Context) error {
+
 	// registration db
 	name := c.FormValue("name")
 	password := c.FormValue("password")
@@ -143,21 +145,32 @@ func postLogins(c echo.Context) error {
 func getMypage(c echo.Context) error {
 
 	session := session.Default(c)
-	id := session.Get("USERID")
+	id := session.Get("USERID").(uint)
 
 	db, err := gorm.Open("postgres", "user="+db_user+" dbname="+db_name+" password='"+db_password+"' sslmode=disable")
 
 	defer db.Close()
 
 	if err != nil {
-		fmt.Print(err)
+		panic(err)
 	}
 
 	user := models.User{}
 	db.First(&user, id)
 
+	address := models.Address{}
+
+	db.First(&address, "user_id = ?", id)
+
+	mailGetter.RegistUnSeenMail(address)
+
+	mail := models.Mail{}
+	db.Last(&mail, "to = ?", address.Address)
+
 	return c.Render(http.StatusOK, "mypage", map[string]interface{}{
-		"UserName": user.Name,
+		"UserName":    user.Name,
+		"MailAddress": address.Address,
+		"Mail":        mail,
 	})
 }
 
@@ -209,7 +222,6 @@ func convertTo32Byte(key string) []byte {
 
 func toEncrypt(password string) string {
 
-	fmt.Println(string(secret_key))
 	plainPassword := []byte(password)
 	block, _ := aes.NewCipher(secret_key)
 
@@ -224,4 +236,17 @@ func toEncrypt(password string) string {
 	encryptStream.XORKeyStream(cipherPassword[aes.BlockSize:], plainPassword)
 
 	return hex.EncodeToString(cipherPassword)
+}
+
+func toDecrypt(password string) string {
+
+	//plainPassword := []byte(password)
+	cipherPassword, _ := hex.DecodeString(password)
+	block, _ := aes.NewCipher(secret_key)
+
+	decryptedPassword := make([]byte, len(cipherPassword[aes.BlockSize:]))
+	decryptStream := cipher.NewCTR(block, cipherText[:aes.BlockSize])
+	decryptStream.XORKeyStream(decryptedText, cipherText[aes.BlockSize:])
+
+	return decrypteedPassword
 }
