@@ -162,15 +162,18 @@ func getMypage(c echo.Context) error {
 
 	db.First(&address, "user_id = ?", id)
 
+	address.Password = toDecrypt(address.Password)
+
 	mailGetter.RegistUnSeenMail(address)
 
 	mail := models.Mail{}
-	db.Last(&mail, "to = ?", address.Address)
+	db.Where("\"to\" = ?", address.Address).First(&mail)
+	//db.First(&mail)
 
 	return c.Render(http.StatusOK, "mypage", map[string]interface{}{
 		"UserName":    user.Name,
 		"MailAddress": address.Address,
-		"Mail":        mail,
+		"Mail":        string(mail.From),
 	})
 }
 
@@ -245,8 +248,8 @@ func toDecrypt(password string) string {
 	block, _ := aes.NewCipher(secret_key)
 
 	decryptedPassword := make([]byte, len(cipherPassword[aes.BlockSize:]))
-	decryptStream := cipher.NewCTR(block, cipherText[:aes.BlockSize])
-	decryptStream.XORKeyStream(decryptedText, cipherText[aes.BlockSize:])
+	decryptStream := cipher.NewCTR(block, cipherPassword[:aes.BlockSize])
+	decryptStream.XORKeyStream(decryptedPassword, cipherPassword[aes.BlockSize:])
 
-	return decrypteedPassword
+	return string(decryptedPassword)
 }

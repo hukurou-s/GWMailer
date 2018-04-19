@@ -1,7 +1,6 @@
 package mail
 
 import (
-	"fmt"
 	"os"
 	"strings"
 	"time"
@@ -58,6 +57,10 @@ func RegistUnSeenMail(address models.Address) {
 		panic(err)
 	}
 
+	if mails[0] != nil {
+		return
+	}
+
 	db, _ := gorm.Open("postgres", "user="+db_user+" dbname="+db_name+" password='"+db_password+"' sslmode=disable")
 	defer db.Close()
 
@@ -78,8 +81,6 @@ func RegistUnSeenMail(address models.Address) {
 		str := mail.Header["Date"][0]
 		layout := "Mon, 2 Jan 2006 15:04:05 -0700"
 		t, _ := time.Parse(layout, str)
-
-		fmt.Printf("%s", body)
 
 		mail := models.Mail{
 			From:       mail.Header["From"][0],
