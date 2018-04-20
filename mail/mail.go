@@ -1,6 +1,7 @@
 package mail
 
 import (
+	"fmt"
 	"os"
 	"strings"
 	"time"
@@ -57,7 +58,7 @@ func RegistUnSeenMail(address models.Address) {
 		panic(err)
 	}
 
-	if mails[0] != nil {
+	if mails[0] == nil {
 		return
 	}
 
@@ -71,6 +72,9 @@ func RegistUnSeenMail(address models.Address) {
 		to := "To: " + mail.Header["To"][0] + "\n"
 		subject := "Subject: " + mail.Header["Subject"][0] + "\n"
 		contentType := "Content-Type: " + mail.Header["Content-Type"][0] + "\n"
+		if mail.Header["Content-Transfer-Encoding"] == nil {
+			continue
+		}
 		contentTransferEncoding := "Content-Transfer-Encoding: " + mail.Header["Content-Transfer-Encoding"][0] + "\n"
 		message := date + from + to + subject + contentType + contentTransferEncoding + "\n" + string(mail.Body)
 
