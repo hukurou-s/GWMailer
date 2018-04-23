@@ -1,0 +1,19 @@
+{{- define "mypage" -}}
+{{- template "header" . -}}
+
+<h3>Welcome {{.UserName}}</h3>
+<p>account : {{.MailAddress}}</p>
+
+<table>
+    <thead>
+        <tr><th>From</th><th>subject</th></tr>
+    </thead>
+    <tbody>
+        {{range .Mail}}
+        <tr><td>{{.From}}</td><td>{{.Subject}}</td></tr>
+        {{end}}
+    </tbody>
+</table>
+
+{{- template "footer" . -}}
+{{- end -}}

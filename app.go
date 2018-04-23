@@ -166,14 +166,13 @@ func getMypage(c echo.Context) error {
 
 	mailGetter.RegistUnSeenMail(address)
 
-	mail := models.Mail{}
-	db.Where("\"to\" = ?", address.Address).First(&mail)
-	//db.First(&mail)
+	mail := []models.Mail{}
+	db.Where("\"to\" = ?", address.Address).Find(&mail)
 
 	return c.Render(http.StatusOK, "mypage", map[string]interface{}{
 		"UserName":    user.Name,
 		"MailAddress": address.Address,
-		"Mail":        string(mail.From),
+		"Mail":        mail,
 	})
 }
 
